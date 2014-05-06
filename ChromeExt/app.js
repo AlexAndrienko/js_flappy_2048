@@ -70,7 +70,6 @@ Bird.prototype.draw = function () {
     }
     ctx.roundRect(this.x, this.y, this.w, this.w, 5).fill();
 
-
     if (this.count < 8) {
         ctx.fillStyle = "776e65";
     } else {
@@ -111,10 +110,10 @@ Point.concat = function () {
     if (bird.count == lastChild.count) {
         var _i = events.length;
         lastChild.active = false;
+
         events.push(function (timeDelta) {
             lastChild.y += (bird.y - lastChild.y) * timeDelta * 15;
             lastChild.x += (bird.x - lastChild.x) * timeDelta * 15;
-
             if (Math.abs(lastChild.y - bird.y) < 5 && Math.abs(lastChild.x - bird.x) < 5) {
                 bird.count += lastChild.count;
                 birds.splice(0, 1);
@@ -133,6 +132,7 @@ Point.prototype.eat = function () {
                 var _point = this;
                 var _i = events.length;
                 _point.active = false;
+
                 events.push(function (timeDelta) {
                     _point.y += (bird.y - _point.y) * timeDelta * 15;
                     _point.x += (bird.x - _point.x) * timeDelta * 15;
@@ -153,13 +153,10 @@ Point.prototype.eat = function () {
                 newBird.count = bird.count;
                 newBird.y = bird.y;
                 newBird.x = bird.x;
-
                 birds.splice(0, 0, newBird);
-
                 bird.count = this.count;
                 bird.x = this.x;
                 bird.y = this.y;
-
                 var _index = points.indexOf(this);
                 if (_index > -1) {
                     points.splice(_index, 1);
@@ -204,7 +201,6 @@ Wall.prototype.kill = function () {
         }
     }
 
-
     for (var i = 0; i < birds.length; i++) {
         var _b = birds[i];
         if (this.x <= _b.x + _b.w && this.x + GS.WALL_LENGTH >= _b.x) {
@@ -215,7 +211,11 @@ Wall.prototype.kill = function () {
         }
     }
 };
+
+
 //---------------------------------------------------------------
+
+
 var Game = {
     colors: {
         2: "#eee4da",
@@ -253,7 +253,7 @@ var Game = {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.font = "bold 30px 'Clear Sans', 'Helvetica Neue', Arial, sans-serif";
-        ctx.fillStyle = "#bbada0";
+        ctx.fillStyle = "#776e65";
         ctx.fillText("Score: " + Game.result.score, GS.SIZE_X / 2 + GS.WALL_LENGTH / 2, GS.SIZE_Y / 2 - GS.WALL_LENGTH / 2);
         ctx.fillText("Walls: " + Game.result.walls, GS.SIZE_X / 2 + GS.WALL_LENGTH / 2, GS.SIZE_Y / 2 + GS.WALL_LENGTH / 2);
     },
@@ -266,21 +266,20 @@ var Game = {
         ctx.textBaseline = 'middle';
         ctx.font = "bold 40px 'Clear Sans', 'Helvetica Neue', Arial, sans-serif";
         ctx.fillStyle = "#776e65";
-        ctx.fillText("Flappy 2048", GS.SIZE_X / 2 + GS.WALL_LENGTH / 2, GS.SIZE_Y / 2);
+        ctx.fillText("FLAPPY 2048", GS.SIZE_X / 2 + GS.WALL_LENGTH / 1.5, GS.SIZE_Y / 2);
+        ctx.font = "bold 15px 'Clear Sans', 'Helvetica Neue', Arial, sans-serif";
+        ctx.fillText("flap to begin", GS.SIZE_X / 2 + GS.WALL_LENGTH / 1.5, GS.SIZE_Y / 2 + GS.WALL_LENGTH / 2);
     },
     wait: function () {
         if (Game.result.walls < 1)
             Game.startScreen();
         else
             Game.resultScreen();
-
         bird.say = '\\^o^/';
         bird.draw();
         if (bird.y < GS.WALL_LENGTH * 3 || bird.y > GS.WALL_LENGTH * 4)
             bird.vertSpeed = -bird.vertSpeed;
-
         bird.y += bird.vertSpeed * 0.07;
-
         if (GS.keysDown) {
             GS.start = true;
             GS.then = Date.now();
