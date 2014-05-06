@@ -14,13 +14,15 @@ CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
     return this;
 };
 //------------global-------------------------
-var requestAnimationFrame = window.webkitRequestAnimationFrame;
+var requestAnimationFrame = window.webkitRequestAnimationFrame || window.requestAnimationFrame;
 
 var ctx, then;
 var SIZE_X = 840;
 var SIZE_Y = 560;
 var WALL_LENGTH = 70;
 var WALL_SPEED = 200;
+
+
 var keysDown = false;
 var start = false;
 var bird;
@@ -83,16 +85,16 @@ function Bird() {
 }
 Bird.prototype.draw = function () {
     ctx.fillStyle = colors[this.count.toString()];
-    if (ctx.fillStyle == undefined) {
+    if (ctx.fillStyle === undefined) {
         ctx.fillStyle = "#bc9410";
     }
     ctx.roundRect(this.x, this.y, this.w, this.w, 5).fill();
 
 
     if (this.count < 8) {
-        ctx.fillStyle = "776e65";
+        ctx.fillStyle = "#776e65";
     } else {
-        ctx.fillStyle = "f9f6f2";
+        ctx.fillStyle = "#f9f6f2";
     }
 
     var _font = 25;
@@ -123,7 +125,7 @@ function Point() {
 Point.prototype.draw = Bird.prototype.draw;
 
 Point.concat = function () {
-    if (birds.length <= 0)
+    if (birds.length == 0)
         return;
     var lastChild = birds[0];
     if (bird.count == lastChild.count) {
@@ -145,8 +147,12 @@ Point.concat = function () {
 
 
 Point.prototype.eat = function () {
+    if (Math.abs(this.x - bird.x) > bird.w)
+        return;
+
     if (this.x < bird.x + bird.w && this.x + this.w > bird.x) {
         if (this.y <= bird.y + bird.w && this.y + this.w >= bird.y) {
+
             if (bird.count == this.count) {
                 var _point = this;
                 var _i = events.length;
@@ -192,6 +198,7 @@ Point.prototype.eat = function () {
                     }
                 });
             }
+
         }
     }
 };
@@ -209,6 +216,9 @@ Wall.prototype.draw = function () {
     ctx.fillRect(this.x - 2, this.gate * WALL_LENGTH, WALL_LENGTH + 4, WALL_LENGTH * 2);
 };
 Wall.prototype.kill = function () {
+    if (this.x - bird.x > bird.w)
+        return;
+
     if (this.x <= bird.x + bird.w && this.x + WALL_LENGTH >= bird.x) {
         if (this.gate * WALL_LENGTH >= bird.y || (this.gate * WALL_LENGTH + WALL_LENGTH * 2) <= bird.y + bird.w) {
             fallItems = birds.slice(0, birds.length);
@@ -264,10 +274,8 @@ function startScreen() {
 
 function main() {
     if (start) {
-
         var now = Date.now();
         var delta = now - then;
-
         update(delta / 1000);
         render();
         then = now;
@@ -302,10 +310,10 @@ function wait() {
 
     if (keysDown) {
         start = true;
-        then = Date.now();
         result.score = 0;
         result.walls = 0;
         bird.say = null;
+        then = Date.now();
     }
 }
 
@@ -341,7 +349,7 @@ function render() {
 
 function update(timeDelta) {
     var i;
-    
+
     result.score = bird.count;
     for (i = birds.length - 1; i > -1; i--) {
         if (birds[i].count > result.score)
@@ -366,6 +374,9 @@ function update(timeDelta) {
     }
     if (walls[0].x < -WALL_LENGTH) {
         walls.splice(0, 1);
+    }
+    if (points[0].x < - bird.w) {
+        points.splice(0, 1);
     }
 
 
