@@ -252,7 +252,7 @@ function resultScreen() {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.font = "bold 30px 'Clear Sans', 'Helvetica Neue', Arial, sans-serif";
-    ctx.fillStyle = "#bbada0";
+    ctx.fillStyle = "#776e65";
     ctx.fillText("Score: " + result.score, SIZE_X / 2 + WALL_LENGTH / 2, SIZE_Y / 2 - WALL_LENGTH / 2);
     ctx.fillText("Walls: " + result.walls, SIZE_X / 2 + WALL_LENGTH / 2, SIZE_Y / 2 + WALL_LENGTH / 2);
 }
