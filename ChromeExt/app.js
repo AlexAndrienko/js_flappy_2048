@@ -82,19 +82,31 @@ function Bird() {
     this.jumpSpeed = 230;
     this.vertSpeed = 50;
     this.fallingConstant = 32;
+
+    this.t_canvas = document.createElement('canvas');
+    this.t_canvas.width = this.w;
+    this.t_canvas.height = this.w;
+    this.t_ctx = this.t_canvas.getContext('2d');
+    this.redraw();
 }
 Bird.prototype.draw = function () {
-    game_ctx.fillStyle = colors[this.count.toString()];
-    if (game_ctx.fillStyle === undefined) {
-        game_ctx.fillStyle = "#bc9410";
+    game_ctx.drawImage(this.t_canvas, this.x, this.y);
+
+};
+Bird.prototype.redraw = function () {
+    this.t_ctx.clearRect(0, 0, this.w, this.w);
+
+    this.t_ctx.fillStyle = colors[this.count.toString()];
+    if (this.t_ctx.fillStyle === undefined) {
+        this.t_ctx.fillStyle = "#bc9410";
     }
-    game_ctx.roundRect(this.x, this.y, this.w, this.w, 5).fill();
+    this.t_ctx.roundRect(0, 0, this.w, this.w, 5).fill();
 
 
     if (this.count < 8) {
-        game_ctx.fillStyle = "#776e65";
+        this.t_ctx.fillStyle = "#776e65";
     } else {
-        game_ctx.fillStyle = "#f9f6f2";
+        this.t_ctx.fillStyle = "#f9f6f2";
     }
 
     var _font = 25;
@@ -104,25 +116,32 @@ Bird.prototype.draw = function () {
     if (this.count / 1000 > 1) {
         _font = 16;
     }
-    game_ctx.textAlign = 'center';
-    game_ctx.textBaseline = 'middle';
-    game_ctx.font = "bold " + _font + "px 'Clear Sans', 'Helvetica Neue', Arial, sans-serif";
-    game_ctx.fillText(this.say || this.count, this.x + (this.w / 2), this.y + (this.w / 2));
+    this.t_ctx.textAlign = 'center';
+    this.t_ctx.textBaseline = 'middle';
+    this.t_ctx.font = "bold " + _font + "px 'Clear Sans', 'Helvetica Neue', Arial, sans-serif";
+    this.t_ctx.fillText(this.say || this.count, this.w / 2, this.w / 2);
 };
 
 
 function Point() {
     this.x = SIZE_X + WALL_LENGTH * 4.5;
-    this.gate = 2 + Math.floor(Math.random() * 4);
-    this.y = this.gate * WALL_LENGTH;
+    var gate = 2 + Math.floor(Math.random() * 4);
+    this.y = gate * WALL_LENGTH;
     this.w = 40;
     this.active = true;
     if (Math.random() > 0.5)
         this.count = 4;
     else
         this.count = 2;
+
+    this.t_canvas = document.createElement('canvas');
+    this.t_canvas.width = this.w;
+    this.t_canvas.height = this.w;
+    this.t_ctx = this.t_canvas.getContext('2d');
+    this.redraw();
 }
 Point.prototype.draw = Bird.prototype.draw;
+Point.prototype.redraw = Bird.prototype.redraw;
 
 Point.concat = function () {
     if (birds.length == 0)
@@ -137,6 +156,7 @@ Point.concat = function () {
 
             if (Math.abs(lastChild.y - bird.y) < 5 && Math.abs(lastChild.x - bird.x) < 5) {
                 bird.count += lastChild.count;
+                bird.redraw();
                 birds.splice(0, 1);
                 events.splice(_i, 1);
                 Point.concat();
@@ -158,11 +178,12 @@ Point.prototype.eat = function () {
                 var _i = events.length;
                 _point.active = false;
                 events.push(function (timeDelta) {
-                    _point.y += (bird.y - _point.y) * timeDelta * 15;
-                    _point.x += (bird.x - _point.x) * timeDelta * 15;
+                    _point.y += (bird.y - _point.y) * timeDelta * 25;
+                    _point.x += (bird.x - _point.x) * timeDelta * 5;
 
                     if (Math.abs(_point.y - bird.y) < 5 && Math.abs(_point.x - bird.x) < 5) {
                         bird.count += _point.count;
+                        bird.redraw();
                         events.splice(_i, 1);
                         var _index = points.indexOf(_point);
                         if (_index > -1) {
@@ -177,12 +198,14 @@ Point.prototype.eat = function () {
                 newBird.count = bird.count;
                 newBird.y = bird.y;
                 newBird.x = bird.x;
+                newBird.redraw();
 
                 birds.splice(0, 0, newBird);
 
                 bird.count = this.count;
                 bird.x = this.x;
                 bird.y = this.y;
+                bird.redraw();
 
                 var _index = points.indexOf(this);
                 if (_index > -1) {
@@ -190,7 +213,7 @@ Point.prototype.eat = function () {
                 }
 
                 events.push(function (timeDelta) {
-                    bird.x -= timeDelta * WALL_SPEED * 0.4;
+                    bird.x -= timeDelta * WALL_SPEED;
 
                     if (bird.x <= SIZE_X / 3) {
                         events.splice(_i, 1);
@@ -225,6 +248,7 @@ Wall.prototype.kill = function () {
             fallItems.push(bird);
             bird.smash = true;
             bird.say = 'x_x';
+            bird.redraw();
         }
         if (!this.passed) {
             this.passed = true;
@@ -296,6 +320,7 @@ function wait() {
         resultScreen();
 
     bird.say = '\\^o^/';
+    bird.redraw();
     bird.draw();
     if (bird.y < WALL_LENGTH * 3 || bird.y > WALL_LENGTH * 4)
         bird.vertSpeed = -bird.vertSpeed;
@@ -307,6 +332,7 @@ function wait() {
         result.score = 0;
         result.walls = 0;
         bird.say = null;
+        bird.redraw();
         then = Date.now();
     }
 }
@@ -318,28 +344,25 @@ function render() {
     game_ctx.clearRect(0, 0, SIZE_X, SIZE_Y);
 
     for (i = 0; i < walls.length; i++) {
-        var _w = walls[i];
-        _w.draw();
+        walls[i].draw();
     }
     for (i = 0; i < points.length; i++) {
-        var _p = points[i];
-        _p.draw();
+        points[i].draw();
     }
     for (i = 0; i < birds.length; i++) {
-        var _b = birds[i];
-        _b.draw();
+        birds[i].draw();
     }
     for (i = 0; i < fallItems.length; i++) {
-        var _f = fallItems[i];
-        _f.say = 'x_x';
-        _f.draw();
+        fallItems[i].say = 'x_x';
+        fallItems[i].redraw();
+        fallItems[i].draw();
     }
 
     bird.draw();
 }
 
 function update(timeDelta) {
-    var i;
+    var i, _b, _f;
 
     result.score = bird.count;
     for (i = birds.length - 1; i > -1; i--) {
@@ -356,12 +379,10 @@ function update(timeDelta) {
 
 
     if (points.length == 0 || points[points.length - 1].x < SIZE_X - WALL_LENGTH * 4.5) {
-        var _point = new Point();
-        points.push(_point);
+        points.push(new Point());
     }
     if (walls.length == 0 || walls[walls.length - 1].x < SIZE_X - WALL_LENGTH * 9) {
-        var _wall = new Wall();
-        walls.push(_wall);
+        walls.push(new Wall());
     }
     if (walls[0].x < -WALL_LENGTH) {
         walls.splice(0, 1);
@@ -371,24 +392,18 @@ function update(timeDelta) {
     }
 
 
-    for (i = 0; i < events.length; i++) {
-        events[i](timeDelta);
-    }
-
     for (i = 0; i < points.length; i++) {
-        var _p = points[i];
-        if (!_p.active) continue;
-        _p.x -= WALL_SPEED * timeDelta;
-        _p.eat();
+        if (!points[i].active) continue;
+        points[i].x -= WALL_SPEED * timeDelta;
+        points[i].eat();
 
     }
     for (i = 0; i < walls.length; i++) {
-        var _w = walls[i];
-        _w.x -= WALL_SPEED * timeDelta;
-        _w.kill();
+        walls[i].x -= WALL_SPEED * timeDelta;
+        walls[i].kill();
     }
     for (i = 0; i < fallItems.length; i++) {
-        var _f = fallItems[i];
+        _f = fallItems[i];
         if (_f.y >= SIZE_Y) {
             fallItems.splice(i, 1);
         }
@@ -397,12 +412,16 @@ function update(timeDelta) {
         _f.x -= WALL_SPEED * timeDelta;
     }
 
+    for (i = 0; i < events.length; i++) {
+        events[i](timeDelta);
+    }
+
     bird.y -= bird.vertSpeed * timeDelta;
     bird.vertSpeed -= bird.fallingConstant * bird.fallingConstant * timeDelta;
 
 
     for (i = birds.length - 1; i > -1; i--) {
-        var _b = birds[i];
+        _b = birds[i];
         if (!_b.active) continue;
         var _parent;
 
@@ -415,15 +434,14 @@ function update(timeDelta) {
         _b.y += (_parent.y - _b.y) * timeDelta * 5;
         _b.x = _parent.x - bird.w - 10;
     }
-
-
 }
 
 function initBG() {
-    var bg_canvas = document.querySelector('#background');
+    var bg_canvas, bg_ctx;
+    bg_canvas = document.querySelector('#background');
     bg_canvas.width = SIZE_X;
     bg_canvas.height = SIZE_Y;
-    var bg_ctx = bg_canvas.getContext("2d");
+    bg_ctx = bg_canvas.getContext("2d");
 
     bg_ctx.fillStyle = "#ccc0b3";
     bg_ctx.fillRect(0, 0, SIZE_X, SIZE_Y);
@@ -432,12 +450,12 @@ function initBG() {
 }
 
 (function init() {
-    initBG();
     var game_canvas = document.querySelector('#game');
     game_canvas.width = SIZE_X;
     game_canvas.height = SIZE_Y;
     game_ctx = game_canvas.getContext("2d");
 
+    initBG();
     reset();
     main();
 })();
