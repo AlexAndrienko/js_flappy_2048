@@ -98,6 +98,8 @@ function Bird() {
     this.redraw();
 };
 Bird.prototype = new DrawableBlock(0);
+delete Bird.prototype.t_canvas;
+delete Bird.prototype.t_ctx;
 Bird.prototype.redraw = function () {
     this.t_ctx.clearRect(0, 0, this.w, this.w);
 
@@ -145,6 +147,8 @@ function Point() {
     this.redraw();
 }
 Point.prototype = new DrawableBlock(0);
+delete Point.prototype.t_canvas;
+delete Point.prototype.t_ctx;
 Point.prototype.redraw = Bird.prototype.redraw;
 
 Point.concat = function () {
@@ -156,7 +160,7 @@ Point.concat = function () {
         lastChild.active = false;
         events.push(function (timeDelta) {
             lastChild.y += (bird.y - lastChild.y) * timeDelta * 25;
-            lastChild.x += (bird.x - lastChild.x) * timeDelta * 5;
+            lastChild.x += (bird.x - lastChild.x) * timeDelta * 10;
 
             if (Math.abs(lastChild.y - bird.y) < 5 && Math.abs(lastChild.x - bird.x) < 5) {
                 bird.count += lastChild.count;
@@ -183,7 +187,7 @@ Point.prototype.eat = function () {
                 _point.active = false;
                 events.push(function (timeDelta) {
                     _point.y += (bird.y - _point.y) * timeDelta * 25;
-                    _point.x += (bird.x - _point.x) * timeDelta * 5;
+                    _point.x += (bird.x - _point.x) * timeDelta * 10;
 
                     if (Math.abs(_point.y - bird.y) < 5 && Math.abs(_point.x - bird.x) < 5) {
                         bird.count += _point.count;
@@ -238,9 +242,8 @@ function Wall() {
 }
 Wall.prototype.draw = function () {
     game_ctx.fillStyle = "#bbada0";
-    game_ctx.fillRect(this.x, 0, WALL_LENGTH, SIZE_Y);
-    game_ctx.fillStyle = "#ccc0b3";
-    game_ctx.fillRect(this.x - 2, this.gate * WALL_LENGTH, WALL_LENGTH + 4, WALL_LENGTH * 2);
+    game_ctx.fillRect(this.x, 0, WALL_LENGTH, SIZE_Y - WALL_LENGTH);
+    game_ctx.clearRect(this.x - 2, this.gate * WALL_LENGTH, WALL_LENGTH + 4, WALL_LENGTH * 2);
 };
 Wall.prototype.kill = function () {
     if (this.x - bird.x > bird.w)
@@ -316,7 +319,7 @@ function reset() {
 }
 
 function wait() {
-    game_ctx.clearRect(0, 0, SIZE_X, SIZE_Y);
+    game_ctx.clearRect(0, 0, SIZE_X, SIZE_Y - WALL_LENGTH);
 
     if (result.walls < 1)
         startScreen();
@@ -345,7 +348,7 @@ function wait() {
 function render() {
     var i;
 
-    game_ctx.clearRect(0, 0, SIZE_X, SIZE_Y);
+    game_ctx.clearRect(0, 0, SIZE_X, SIZE_Y - WALL_LENGTH);
 
     for (i = 0; i < walls.length; i++) {
         walls[i].draw();
@@ -456,7 +459,7 @@ function initBG() {
 (function init() {
     var game_canvas = document.querySelector('#game');
     game_canvas.width = SIZE_X;
-    game_canvas.height = SIZE_Y;
+    game_canvas.height = SIZE_Y - WALL_LENGTH;
     game_ctx = game_canvas.getContext("2d");
 
     initBG();
