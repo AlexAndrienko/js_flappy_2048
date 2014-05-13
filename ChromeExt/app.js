@@ -70,6 +70,16 @@ addEventListener("mouseup", function () {
 
 
 //------------objects---------------------------------------
+function DrawableBlock(width){
+    this.t_canvas = document.createElement('canvas');
+    this.t_canvas.width = width;
+    this.t_canvas.height = width;
+    this.t_ctx = this.t_canvas.getContext('2d');
+}
+DrawableBlock.prototype.draw = function () {
+    game_ctx.drawImage(this.t_canvas, this.x, this.y);
+};
+
 
 function Bird() {
     this.say = null;
@@ -83,16 +93,11 @@ function Bird() {
     this.vertSpeed = 50;
     this.fallingConstant = 32;
 
-    this.t_canvas = document.createElement('canvas');
-    this.t_canvas.width = this.w;
-    this.t_canvas.height = this.w;
-    this.t_ctx = this.t_canvas.getContext('2d');
-    this.redraw();
-}
-Bird.prototype.draw = function () {
-    game_ctx.drawImage(this.t_canvas, this.x, this.y);
+    DrawableBlock.call(this, this.w);
 
+    this.redraw();
 };
+Bird.prototype = new DrawableBlock(0);
 Bird.prototype.redraw = function () {
     this.t_ctx.clearRect(0, 0, this.w, this.w);
 
@@ -134,13 +139,12 @@ function Point() {
     else
         this.count = 2;
 
-    this.t_canvas = document.createElement('canvas');
-    this.t_canvas.width = this.w;
-    this.t_canvas.height = this.w;
-    this.t_ctx = this.t_canvas.getContext('2d');
+
+    DrawableBlock.call(this, this.w);
+
     this.redraw();
 }
-Point.prototype.draw = Bird.prototype.draw;
+Point.prototype = new DrawableBlock(0);
 Point.prototype.redraw = Bird.prototype.redraw;
 
 Point.concat = function () {
@@ -151,8 +155,8 @@ Point.concat = function () {
         var _i = events.length;
         lastChild.active = false;
         events.push(function (timeDelta) {
-            lastChild.y += (bird.y - lastChild.y) * timeDelta * 15;
-            lastChild.x += (bird.x - lastChild.x) * timeDelta * 15;
+            lastChild.y += (bird.y - lastChild.y) * timeDelta * 25;
+            lastChild.x += (bird.x - lastChild.x) * timeDelta * 5;
 
             if (Math.abs(lastChild.y - bird.y) < 5 && Math.abs(lastChild.x - bird.x) < 5) {
                 bird.count += lastChild.count;
