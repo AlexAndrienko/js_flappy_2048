@@ -1,4 +1,3 @@
-
 //////------------util--------------
 
 CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
@@ -16,7 +15,8 @@ CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
 //------------global-------------------------
 var requestAnimationFrame = window.webkitRequestAnimationFrame || window.requestAnimationFrame;
 
-var ctx, then;
+var game_ctx;
+var then;
 var SIZE_X = 840;
 var SIZE_Y = 560;
 var WALL_LENGTH = 70;
@@ -84,17 +84,17 @@ function Bird() {
     this.fallingConstant = 32;
 }
 Bird.prototype.draw = function () {
-    ctx.fillStyle = colors[this.count.toString()];
-    if (ctx.fillStyle === undefined) {
-        ctx.fillStyle = "#bc9410";
+    game_ctx.fillStyle = colors[this.count.toString()];
+    if (game_ctx.fillStyle === undefined) {
+        game_ctx.fillStyle = "#bc9410";
     }
-    ctx.roundRect(this.x, this.y, this.w, this.w, 5).fill();
+    game_ctx.roundRect(this.x, this.y, this.w, this.w, 5).fill();
 
 
     if (this.count < 8) {
-        ctx.fillStyle = "#776e65";
+        game_ctx.fillStyle = "#776e65";
     } else {
-        ctx.fillStyle = "#f9f6f2";
+        game_ctx.fillStyle = "#f9f6f2";
     }
 
     var _font = 25;
@@ -104,10 +104,10 @@ Bird.prototype.draw = function () {
     if (this.count / 1000 > 1) {
         _font = 16;
     }
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.font = "bold " + _font + "px 'Clear Sans', 'Helvetica Neue', Arial, sans-serif";
-    ctx.fillText(this.say || this.count, this.x + (this.w / 2), this.y + (this.w / 2));
+    game_ctx.textAlign = 'center';
+    game_ctx.textBaseline = 'middle';
+    game_ctx.font = "bold " + _font + "px 'Clear Sans', 'Helvetica Neue', Arial, sans-serif";
+    game_ctx.fillText(this.say || this.count, this.x + (this.w / 2), this.y + (this.w / 2));
 };
 
 
@@ -157,11 +157,11 @@ Point.prototype.eat = function () {
                 var _point = this;
                 var _i = events.length;
                 _point.active = false;
-                events.push(function(timeDelta){
+                events.push(function (timeDelta) {
                     _point.y += (bird.y - _point.y) * timeDelta * 15;
                     _point.x += (bird.x - _point.x) * timeDelta * 15;
 
-                    if (Math.abs(_point.y - bird.y) < 5 && Math.abs(_point.x - bird.x) < 5){
+                    if (Math.abs(_point.y - bird.y) < 5 && Math.abs(_point.x - bird.x) < 5) {
                         bird.count += _point.count;
                         events.splice(_i, 1);
                         var _index = points.indexOf(_point);
@@ -189,10 +189,10 @@ Point.prototype.eat = function () {
                     points.splice(_index, 1);
                 }
 
-                events.push(function(timeDelta){
+                events.push(function (timeDelta) {
                     bird.x -= timeDelta * WALL_SPEED * 0.4;
 
-                    if (bird.x <= SIZE_X / 3){
+                    if (bird.x <= SIZE_X / 3) {
                         events.splice(_i, 1);
                         bird.x = SIZE_X / 3;
                     }
@@ -210,10 +210,10 @@ function Wall() {
     this.passed = false;
 }
 Wall.prototype.draw = function () {
-    ctx.fillStyle = "#bbada0";
-    ctx.fillRect(this.x, 0, WALL_LENGTH, SIZE_Y);
-    ctx.fillStyle = "#ccc0b3";
-    ctx.fillRect(this.x - 2, this.gate * WALL_LENGTH, WALL_LENGTH + 4, WALL_LENGTH * 2);
+    game_ctx.fillStyle = "#bbada0";
+    game_ctx.fillRect(this.x, 0, WALL_LENGTH, SIZE_Y);
+    game_ctx.fillStyle = "#ccc0b3";
+    game_ctx.fillRect(this.x - 2, this.gate * WALL_LENGTH, WALL_LENGTH + 4, WALL_LENGTH * 2);
 };
 Wall.prototype.kill = function () {
     if (this.x - bird.x > bird.w)
@@ -245,30 +245,22 @@ Wall.prototype.kill = function () {
 };
 //-----------logic-----------------------------------------------
 function resultScreen() {
-    ctx.fillStyle = "#ccc0b3";
-    ctx.fillRect(0, 0, SIZE_X, SIZE_Y);
-    ctx.fillStyle = "#bbada0";
-    ctx.fillRect(0, SIZE_Y - WALL_LENGTH, SIZE_X, WALL_LENGTH);
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.font = "bold 30px 'Clear Sans', 'Helvetica Neue', Arial, sans-serif";
-    ctx.fillStyle = "#776e65";
-    ctx.fillText("Score: " + result.score, SIZE_X / 2 + WALL_LENGTH / 2, SIZE_Y / 2 - WALL_LENGTH / 2);
-    ctx.fillText("Walls: " + result.walls, SIZE_X / 2 + WALL_LENGTH / 2, SIZE_Y / 2 + WALL_LENGTH / 2);
+    game_ctx.textAlign = 'center';
+    game_ctx.textBaseline = 'middle';
+    game_ctx.font = "bold 30px 'Clear Sans', 'Helvetica Neue', Arial, sans-serif";
+    game_ctx.fillStyle = "#776e65";
+    game_ctx.fillText("Score: " + result.score, SIZE_X / 2 + WALL_LENGTH / 2, SIZE_Y / 2 - WALL_LENGTH / 2);
+    game_ctx.fillText("Walls: " + result.walls, SIZE_X / 2 + WALL_LENGTH / 2, SIZE_Y / 2 + WALL_LENGTH / 2);
 }
 
 function startScreen() {
-    ctx.fillStyle = "#ccc0b3";
-    ctx.fillRect(0, 0, SIZE_X, SIZE_Y);
-    ctx.fillStyle = "#bbada0";
-    ctx.fillRect(0, SIZE_Y - WALL_LENGTH, SIZE_X, WALL_LENGTH);
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.font = "bold 40px 'Clear Sans', 'Helvetica Neue', Arial, sans-serif";
-    ctx.fillStyle = "#776e65";
-    ctx.fillText("Flappy 2048", SIZE_X / 2 + WALL_LENGTH / 2, SIZE_Y / 2);
-    ctx.font = "bold 15px 'Clear Sans', 'Helvetica Neue', Arial, sans-serif";
-    ctx.fillText("flap to begin", SIZE_X / 2 + WALL_LENGTH / 1.5, SIZE_Y / 2 + WALL_LENGTH / 2);
+    game_ctx.textAlign = 'center';
+    game_ctx.textBaseline = 'middle';
+    game_ctx.font = "bold 40px 'Clear Sans', 'Helvetica Neue', Arial, sans-serif";
+    game_ctx.fillStyle = "#776e65";
+    game_ctx.fillText("Flappy 2048", SIZE_X / 2 + WALL_LENGTH / 2, SIZE_Y / 2);
+    game_ctx.font = "bold 15px 'Clear Sans', 'Helvetica Neue', Arial, sans-serif";
+    game_ctx.fillText("flap to begin", SIZE_X / 2 + WALL_LENGTH / 1.5, SIZE_Y / 2 + WALL_LENGTH / 2);
 }
 
 
@@ -296,6 +288,8 @@ function reset() {
 }
 
 function wait() {
+    game_ctx.clearRect(0, 0, SIZE_X, SIZE_Y);
+
     if (result.walls < 1)
         startScreen();
     else
@@ -321,10 +315,7 @@ function wait() {
 function render() {
     var i;
 
-    ctx.fillStyle = "#ccc0b3";
-    ctx.fillRect(0, 0, SIZE_X, SIZE_Y);
-    ctx.fillStyle = "#bbada0";
-    ctx.fillRect(0, SIZE_Y - WALL_LENGTH, SIZE_X, WALL_LENGTH);
+    game_ctx.clearRect(0, 0, SIZE_X, SIZE_Y);
 
     for (i = 0; i < walls.length; i++) {
         var _w = walls[i];
@@ -375,7 +366,7 @@ function update(timeDelta) {
     if (walls[0].x < -WALL_LENGTH) {
         walls.splice(0, 1);
     }
-    if (points[0].x < - bird.w) {
+    if (points[0].x < -bird.w) {
         points.splice(0, 1);
     }
 
@@ -386,7 +377,7 @@ function update(timeDelta) {
 
     for (i = 0; i < points.length; i++) {
         var _p = points[i];
-        if(!_p.active) continue;
+        if (!_p.active) continue;
         _p.x -= WALL_SPEED * timeDelta;
         _p.eat();
 
@@ -412,7 +403,7 @@ function update(timeDelta) {
 
     for (i = birds.length - 1; i > -1; i--) {
         var _b = birds[i];
-        if(!_b.active) continue;
+        if (!_b.active) continue;
         var _parent;
 
         if (i != 0) {
@@ -428,12 +419,24 @@ function update(timeDelta) {
 
 }
 
+function initBG() {
+    var bg_canvas = document.querySelector('#background');
+    bg_canvas.width = SIZE_X;
+    bg_canvas.height = SIZE_Y;
+    var bg_ctx = bg_canvas.getContext("2d");
+
+    bg_ctx.fillStyle = "#ccc0b3";
+    bg_ctx.fillRect(0, 0, SIZE_X, SIZE_Y);
+    bg_ctx.fillStyle = "#bbada0";
+    bg_ctx.fillRect(0, SIZE_Y - WALL_LENGTH, SIZE_X, WALL_LENGTH);
+}
+
 (function init() {
-    var canvas = document.querySelector('canvas');
-    ctx = canvas.getContext("2d");
-    canvas.width = SIZE_X;
-    canvas.height = SIZE_Y;
-    document.body.appendChild(canvas);
+    initBG();
+    var game_canvas = document.querySelector('#game');
+    game_canvas.width = SIZE_X;
+    game_canvas.height = SIZE_Y;
+    game_ctx = game_canvas.getContext("2d");
 
     reset();
     main();
