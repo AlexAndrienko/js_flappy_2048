@@ -128,6 +128,17 @@ Bird.prototype.redraw = function () {
     this.t_ctx.font = "bold " + _font + "px 'Clear Sans', 'Helvetica Neue', Arial, sans-serif";
     this.t_ctx.fillText(this.say || this.count, this.w / 2, this.w / 2);
 };
+Bird.prototype.setCount = function(cnt){
+    this.count = cnt;
+    this.redraw();
+};
+Bird.prototype.incCount = function(cnt){
+    this.setCount(this.count + cnt);
+};
+Bird.prototype.setWord = function(say){
+    this.say = say;
+    this.redraw();
+};
 
 
 function Point() {
@@ -163,8 +174,7 @@ Point.concat = function () {
             lastChild.x += (bird.x - lastChild.x) * timeDelta * 10;
 
             if (Math.abs(lastChild.y - bird.y) < 5 && Math.abs(lastChild.x - bird.x) < 5) {
-                bird.count += lastChild.count;
-                bird.redraw();
+                bird.incCount(lastChild.count);
                 birds.splice(0, 1);
                 events.splice(_i, 1);
                 Point.concat();
@@ -190,8 +200,7 @@ Point.prototype.eat = function () {
                     _point.x += (bird.x - _point.x) * timeDelta * 10;
 
                     if (Math.abs(_point.y - bird.y) < 5 && Math.abs(_point.x - bird.x) < 5) {
-                        bird.count += _point.count;
-                        bird.redraw();
+                        bird.incCount(_point.count);
                         events.splice(_i, 1);
                         var _index = points.indexOf(_point);
                         if (_index > -1) {
@@ -203,17 +212,15 @@ Point.prototype.eat = function () {
             }
             else {
                 var newBird = new Bird();
-                newBird.count = bird.count;
                 newBird.y = bird.y;
                 newBird.x = bird.x;
-                newBird.redraw();
+                newBird.setCount(bird.count);
 
                 birds.splice(0, 0, newBird);
 
-                bird.count = this.count;
                 bird.x = this.x;
                 bird.y = this.y;
-                bird.redraw();
+                bird.setCount(this.count);
 
                 var _index = points.indexOf(this);
                 if (_index > -1) {
@@ -254,8 +261,7 @@ Wall.prototype.kill = function () {
             fallItems = birds.slice(0, birds.length);
             fallItems.push(bird);
             bird.smash = true;
-            bird.say = 'x_x';
-            bird.redraw();
+            bird.setWord('x_x');
         }
         if (!this.passed) {
             this.passed = true;
@@ -326,8 +332,7 @@ function wait() {
     else
         resultScreen();
 
-    bird.say = '\\^o^/';
-    bird.redraw();
+    bird.setWord('\\^o^/');
     bird.draw();
     if (bird.y < WALL_LENGTH * 3 || bird.y > WALL_LENGTH * 4)
         bird.vertSpeed = -bird.vertSpeed;
@@ -344,10 +349,8 @@ function wait() {
     }
 }
 
-
 function render() {
     var i;
-
     game_ctx.clearRect(0, 0, SIZE_X, SIZE_Y - WALL_LENGTH);
 
     for (i = 0; i < walls.length; i++) {
@@ -360,8 +363,7 @@ function render() {
         birds[i].draw();
     }
     for (i = 0; i < fallItems.length; i++) {
-        fallItems[i].say = 'x_x';
-        fallItems[i].redraw();
+        fallItems[i].setWord('x_x');
         fallItems[i].draw();
     }
 
