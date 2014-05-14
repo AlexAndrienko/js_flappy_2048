@@ -15,7 +15,7 @@ CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
 //------------global-------------------------
 var requestAnimationFrame = window.webkitRequestAnimationFrame || window.requestAnimationFrame;
 
-var game_ctx;
+var game_ctx, movingbg_ctx;
 var then;
 var SIZE_X = 840;
 var SIZE_Y = 560;
@@ -31,6 +31,7 @@ var birds = [];
 var walls = [];
 var fallItems = [];
 var events = [];
+var bg_walls = [];
 
 var colors = {
     2: "#eee4da",
@@ -70,7 +71,7 @@ addEventListener("mouseup", function () {
 
 
 //------------objects---------------------------------------
-function DrawableBlock(width){
+function DrawableBlock(width) {
     this.t_canvas = document.createElement('canvas');
     this.t_canvas.width = width;
     this.t_canvas.height = width;
@@ -94,9 +95,8 @@ function Bird() {
     this.fallingConstant = 32;
 
     DrawableBlock.call(this, this.w);
-
     this.redraw();
-};
+}
 Bird.prototype = new DrawableBlock(0);
 delete Bird.prototype.t_canvas;
 delete Bird.prototype.t_ctx;
@@ -128,14 +128,14 @@ Bird.prototype.redraw = function () {
     this.t_ctx.font = "bold " + _font + "px 'Clear Sans', 'Helvetica Neue', Arial, sans-serif";
     this.t_ctx.fillText(this.say || this.count, this.w / 2, this.w / 2);
 };
-Bird.prototype.setCount = function(cnt){
+Bird.prototype.setCount = function (cnt) {
     this.count = cnt;
     this.redraw();
 };
-Bird.prototype.incCount = function(cnt){
+Bird.prototype.incCount = function (cnt) {
     this.setCount(this.count + cnt);
 };
-Bird.prototype.setWord = function(say){
+Bird.prototype.setWord = function (say) {
     this.say = say;
     this.redraw();
 };
@@ -280,8 +280,20 @@ Wall.prototype.kill = function () {
         }
     }
 };
+
+
+function BGWall() {
+    this.x = SIZE_X;
+    this.height = Math.floor(Math.random() * 5);
+}
+BGWall.prototype.draw = function () {
+    movingbg_ctx.fillStyle = "rgba(187,173,160,0.3)";
+    movingbg_ctx.fillRect(this.x, this.height * WALL_LENGTH, WALL_LENGTH, (4 - this.height) * WALL_LENGTH);
+};
+
 //-----------logic-----------------------------------------------
 function resultScreen() {
+    game_ctx.clearRect(0, 0, SIZE_X, SIZE_Y - WALL_LENGTH);
     game_ctx.textAlign = 'center';
     game_ctx.textBaseline = 'middle';
     game_ctx.font = "bold 30px 'Clear Sans', 'Helvetica Neue', Arial, sans-serif";
@@ -291,6 +303,7 @@ function resultScreen() {
 }
 
 function startScreen() {
+    game_ctx.clearRect(0, 0, SIZE_X, SIZE_Y - WALL_LENGTH);
     game_ctx.textAlign = 'center';
     game_ctx.textBaseline = 'middle';
     game_ctx.font = "bold 40px 'Clear Sans', 'Helvetica Neue', Arial, sans-serif";
@@ -305,8 +318,10 @@ function main() {
     if (start) {
         var now = Date.now();
         var delta = now - then;
-        update(delta / 1000);
-        render();
+        if (update(delta / 1000)) {
+            render();
+            renderBG(delta / 1000)
+        }
         then = now;
     } else {
         wait();
@@ -322,17 +337,18 @@ function reset() {
     birds = [];
     fallItems = [];
     events = [];
+
+    if (result.walls < 1) {
+        startScreen();
+    } else {
+        resultScreen();
+    }
+    bird.setWord('\\^o^/');
 }
 
 function wait() {
-    game_ctx.clearRect(0, 0, SIZE_X, SIZE_Y - WALL_LENGTH);
+    game_ctx.clearRect(bird.x, 0, bird.w, SIZE_Y - WALL_LENGTH);
 
-    if (result.walls < 1)
-        startScreen();
-    else
-        resultScreen();
-
-    bird.setWord('\\^o^/');
     bird.draw();
     if (bird.y < WALL_LENGTH * 3 || bird.y > WALL_LENGTH * 4)
         bird.vertSpeed = -bird.vertSpeed;
@@ -384,6 +400,7 @@ function update(timeDelta) {
     }
     if (bird.y >= SIZE_Y - bird.w - WALL_LENGTH) {
         reset();
+        return false;
     }
 
 
@@ -443,10 +460,31 @@ function update(timeDelta) {
         _b.y += (_parent.y - _b.y) * timeDelta * 5;
         _b.x = _parent.x - bird.w - 10;
     }
+    return true;
+}
+
+function renderBG(timeDelta) {
+    movingbg_ctx.clearRect(0, 0, SIZE_X, WALL_LENGTH * 4);
+
+    if (bg_walls.length > 0) {
+        for (var i = 0; i < bg_walls.length; i++) {
+            bg_walls[i].x -= WALL_SPEED * timeDelta / 4;
+            bg_walls[i].draw();
+        }
+    }
+
+    if (bg_walls.length == 0 || bg_walls[bg_walls.length - 1].x < SIZE_X - WALL_LENGTH * (1.5 + Math.floor(Math.random() * 10))) {
+        bg_walls.push(new BGWall());
+    }
+    if (bg_walls[0].x < -WALL_LENGTH) {
+        bg_walls.splice(0, 1);
+    }
+
+
 }
 
 function initBG() {
-    var bg_canvas, bg_ctx;
+    var bg_canvas, bg_ctx, moving_bg;
     bg_canvas = document.querySelector('#background');
     bg_canvas.width = SIZE_X;
     bg_canvas.height = SIZE_Y;
@@ -456,6 +494,12 @@ function initBG() {
     bg_ctx.fillRect(0, 0, SIZE_X, SIZE_Y);
     bg_ctx.fillStyle = "#bbada0";
     bg_ctx.fillRect(0, SIZE_Y - WALL_LENGTH, SIZE_X, WALL_LENGTH);
+
+
+    moving_bg = document.querySelector('#moving_background');
+    moving_bg.width = SIZE_X;
+    moving_bg.height = WALL_LENGTH * 4;
+    movingbg_ctx = moving_bg.getContext("2d");
 }
 
 (function init() {
