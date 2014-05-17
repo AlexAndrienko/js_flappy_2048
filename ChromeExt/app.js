@@ -55,8 +55,10 @@ var result = {
 
 
 addEventListener("keydown", function (e) {
-    if (e.keyCode == 16 || e.keyCode == 17 || e.keyCode == 18)
-        fps_on = true;
+    if (e.keyCode == 17)
+        fps_on = !fps_on;
+    if (e.keyCode == 17 || e.keyCode == 17 || e.keyCode == 18 || e.keyCode >= 112)
+        return;
     else
         keysDown = true;
 }, false);
@@ -83,8 +85,8 @@ function DrawableBlock(width, height) {
     this.t_canvas = t_canvas;
     this.t_ctx = this.t_canvas.getContext('2d');
 }
-DrawableBlock.prototype.draw = function () {
-    game_ctx.drawImage(this.t_canvas, Math.floor(this.x), Math.floor(this.y) || 0);
+DrawableBlock.prototype.draw = function (ctx) {
+    ctx.drawImage(this.t_canvas, Math.floor(this.x), Math.floor(this.y) || 0);
 };
 
 
@@ -109,10 +111,7 @@ delete Bird.prototype.t_ctx;
 Bird.prototype.redraw = function () {
     this.t_ctx.clearRect(0, 0, this.w, this.w);
 
-    this.t_ctx.fillStyle = colors[this.count.toString()];
-    if (this.t_ctx.fillStyle === undefined) {
-        this.t_ctx.fillStyle = "#bc9410";
-    }
+    this.t_ctx.fillStyle = colors[this.count.toString()] || "#3c3a32";
     this.t_ctx.roundRect(0, 0, this.w, this.w, 5).fill();
 
 
@@ -256,11 +255,10 @@ function Wall() {
     this.t_ctx.fillStyle = "#bbada0";
     this.t_ctx.fillRect(0, 0, WALL_LENGTH, SIZE_Y - WALL_LENGTH);
     this.t_ctx.clearRect(0, this.gate * WALL_LENGTH, WALL_LENGTH, WALL_LENGTH * 2);
-};
-
+}
 Wall.prototype = new DrawableBlock();
-delete Point.prototype.t_canvas;
-delete Point.prototype.t_ctx;
+delete Wall.prototype.t_canvas;
+delete Wall.prototype.t_ctx;
 
 Wall.prototype.kill = function () {
     if (this.x - bird.x > bird.w)
@@ -294,12 +292,18 @@ Wall.prototype.kill = function () {
 
 function BGWall() {
     this.x = SIZE_X;
-    this.height = Math.floor(Math.random() * 5);
+    this.height = Math.floor(Math.random() * 9) * 28 + 28
+    this.y = WALL_LENGTH * 4 - this.height;
+
+    DrawableBlock.call(this, WALL_LENGTH, this.height);
+
+    this.t_ctx.fillStyle = "rgba(187,173,160,0.3)";
+    this.t_ctx.fillRect(0, 0, WALL_LENGTH, this.height);
 }
-BGWall.prototype.draw = function () {
-    movingbg_ctx.fillStyle = "rgba(187,173,160,0.3)";
-    movingbg_ctx.fillRect(this.x, this.height * WALL_LENGTH, WALL_LENGTH, (4 - this.height) * WALL_LENGTH);
-};
+BGWall.prototype = new DrawableBlock();
+delete BGWall.prototype.t_canvas;
+delete BGWall.prototype.t_ctx;
+
 
 //-----------logic-----------------------------------------------
 function resultScreen() {
@@ -388,7 +392,7 @@ function reset() {
 function wait() {
     game_ctx.clearRect(bird.x, 0, bird.w, SIZE_Y - WALL_LENGTH);
 
-    bird.draw();
+    bird.draw(game_ctx);
     if (bird.y < WALL_LENGTH * 3 || bird.y > WALL_LENGTH * 4)
         bird.vertSpeed = -bird.vertSpeed;
 
@@ -409,20 +413,20 @@ function render() {
     game_ctx.clearRect(0, 0, SIZE_X, SIZE_Y - WALL_LENGTH);
 
     for (i = 0; i < walls.length; i++) {
-        walls[i].draw();
+        walls[i].draw(game_ctx);
     }
     for (i = 0; i < points.length; i++) {
-        points[i].draw();
+        points[i].draw(game_ctx);
     }
     for (i = 0; i < birds.length; i++) {
-        birds[i].draw();
+        birds[i].draw(game_ctx);
     }
     for (i = 0; i < fallItems.length; i++) {
         fallItems[i].setWord('x_x');
-        fallItems[i].draw();
+        fallItems[i].draw(game_ctx);
     }
 
-    bird.draw();
+    bird.draw(game_ctx);
 }
 
 function update(timeDelta) {
@@ -502,21 +506,22 @@ function update(timeDelta) {
     return true;
 }
 
+var next_BG_wall_x = SIZE_X - WALL_LENGTH * (1 + Math.floor(Math.random() * 2));
+
 function renderBG(timeDelta) {
     movingbg_ctx.clearRect(0, 0, SIZE_X, WALL_LENGTH * 4);
 
-    if (bg_walls.length > 0) {
-        for (var i = 0; i < bg_walls.length; i++) {
-            bg_walls[i].x -= WALL_SPEED * timeDelta / 4;
-            bg_walls[i].draw();
-        }
-    }
-
-    if (bg_walls.length == 0 || bg_walls[bg_walls.length - 1].x < SIZE_X - WALL_LENGTH * (1.5 + Math.floor(Math.random() * 10))) {
+    if (bg_walls.length == 0 || bg_walls[bg_walls.length - 1].x <= next_BG_wall_x) {
         bg_walls.push(new BGWall());
+        next_BG_wall_x = SIZE_X - WALL_LENGTH * (1 + Math.floor(Math.random() * 2));
     }
     if (bg_walls[0].x < -WALL_LENGTH) {
         bg_walls.splice(0, 1);
+    }
+
+    for (var i = 0; i < bg_walls.length; i++) {
+        bg_walls[i].x -= WALL_SPEED * timeDelta / 4;
+        bg_walls[i].draw(movingbg_ctx);
     }
 }
 
