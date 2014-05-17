@@ -16,6 +16,7 @@ CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
 var requestAnimationFrame = window.webkitRequestAnimationFrame || window.requestAnimationFrame;
 
 var game_ctx, movingbg_ctx;
+var fps_on = false;
 var then;
 var SIZE_X = 840;
 var SIZE_Y = 560;
@@ -53,8 +54,11 @@ var result = {
 };
 
 
-addEventListener("keydown", function () {
-    keysDown = true;
+addEventListener("keydown", function (e) {
+    if (e.keyCode == 16 || e.keyCode == 17 || e.keyCode == 18)
+        fps_on = true;
+    else
+        keysDown = true;
 }, false);
 
 addEventListener("keyup", function () {
@@ -71,14 +75,16 @@ addEventListener("mouseup", function () {
 
 
 //------------objects---------------------------------------
-function DrawableBlock(width) {
-    this.t_canvas = document.createElement('canvas');
-    this.t_canvas.width = width;
-    this.t_canvas.height = width;
+function DrawableBlock(width, height) {
+    var t_canvas = document.createElement('canvas');
+    t_canvas.width = width || 0;
+    t_canvas.height = height || width || 0;
+
+    this.t_canvas = t_canvas;
     this.t_ctx = this.t_canvas.getContext('2d');
 }
 DrawableBlock.prototype.draw = function () {
-    game_ctx.drawImage(this.t_canvas, this.x, this.y);
+    game_ctx.drawImage(this.t_canvas, Math.floor(this.x), Math.floor(this.y) || 0);
 };
 
 
@@ -97,7 +103,7 @@ function Bird() {
     DrawableBlock.call(this, this.w);
     this.redraw();
 }
-Bird.prototype = new DrawableBlock(0);
+Bird.prototype = new DrawableBlock();
 delete Bird.prototype.t_canvas;
 delete Bird.prototype.t_ctx;
 Bird.prototype.redraw = function () {
@@ -152,12 +158,10 @@ function Point() {
     else
         this.count = 2;
 
-
     DrawableBlock.call(this, this.w);
-
     this.redraw();
 }
-Point.prototype = new DrawableBlock(0);
+Point.prototype = new DrawableBlock();
 delete Point.prototype.t_canvas;
 delete Point.prototype.t_ctx;
 Point.prototype.redraw = Bird.prototype.redraw;
@@ -246,12 +250,18 @@ function Wall() {
     this.gate = 1 + Math.floor(Math.random() * 4);
     this.x = SIZE_X;
     this.passed = false;
-}
-Wall.prototype.draw = function () {
-    game_ctx.fillStyle = "#bbada0";
-    game_ctx.fillRect(this.x, 0, WALL_LENGTH, SIZE_Y - WALL_LENGTH);
-    game_ctx.clearRect(this.x - 2, this.gate * WALL_LENGTH, WALL_LENGTH + 4, WALL_LENGTH * 2);
+
+    DrawableBlock.call(this, WALL_LENGTH, SIZE_Y - WALL_LENGTH);
+
+    this.t_ctx.fillStyle = "#bbada0";
+    this.t_ctx.fillRect(0, 0, WALL_LENGTH, SIZE_Y - WALL_LENGTH);
+    this.t_ctx.clearRect(0, this.gate * WALL_LENGTH, WALL_LENGTH, WALL_LENGTH * 2);
 };
+
+Wall.prototype = new DrawableBlock();
+delete Point.prototype.t_canvas;
+delete Point.prototype.t_ctx;
+
 Wall.prototype.kill = function () {
     if (this.x - bird.x > bird.w)
         return;
@@ -313,14 +323,40 @@ function startScreen() {
     game_ctx.fillText("flap to begin", SIZE_X / 2 + WALL_LENGTH / 1.5, SIZE_Y / 2 + WALL_LENGTH / 2);
 }
 
+var min_fps = 10000;
+var max_fps = 0;
+
+function renderFps(timeDelta) {
+    var fps;
+
+    if (!fps_on) return;
+    fps = Math.floor(1000 / timeDelta);
+    if (fps < min_fps) {
+        min_fps = fps;
+    }
+    if (fps > max_fps) {
+        max_fps = fps;
+    }
+
+    game_ctx.font = "bold 10px 'Clear Sans', 'Helvetica Neue', Arial, sans-serif";
+    game_ctx.fillStyle = "#776e65";
+    game_ctx.fillText("cur fps: " + fps, SIZE_X - WALL_LENGTH, WALL_LENGTH / 4);
+    game_ctx.fillText("min fps: " + min_fps, SIZE_X - WALL_LENGTH, WALL_LENGTH / 2);
+    game_ctx.fillText("max fps: " + max_fps, SIZE_X - WALL_LENGTH, WALL_LENGTH);
+}
 
 function main() {
+    var timeDelta, now;
+
     if (start) {
-        var now = Date.now();
-        var delta = now - then;
-        if (update(delta / 1000)) {
+        now = Date.now();
+        timeDelta = now - then;
+        if (update(timeDelta / 1000)) {
             render();
-            renderBG(delta / 1000)
+            renderBG(timeDelta / 1000);
+
+            //show FPS meeter
+            renderFps(timeDelta);
         }
         then = now;
     } else {
@@ -337,6 +373,9 @@ function reset() {
     birds = [];
     fallItems = [];
     events = [];
+
+    min_fps = 1000;
+    max_fps = 0;
 
     if (result.walls < 1) {
         startScreen();
@@ -479,8 +518,6 @@ function renderBG(timeDelta) {
     if (bg_walls[0].x < -WALL_LENGTH) {
         bg_walls.splice(0, 1);
     }
-
-
 }
 
 function initBG() {
