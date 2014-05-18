@@ -55,12 +55,13 @@ var result = {
 
 
 addEventListener("keydown", function (e) {
-    if (e.keyCode == 17)
+    if (e.keyCode == 17) {
         fps_on = !fps_on;
-    if (e.keyCode == 17 || e.keyCode == 17 || e.keyCode == 18 || e.keyCode >= 112)
+    }
+    if (e.keyCode == 16 || e.keyCode == 17 || e.keyCode == 18 || e.keyCode >= 112) {
         return;
-    else
-        keysDown = true;
+    }
+    keysDown = true;
 }, false);
 
 addEventListener("keyup", function () {
@@ -152,10 +153,14 @@ function Point() {
     this.y = gate * WALL_LENGTH;
     this.w = 40;
     this.active = true;
-    if (Math.random() > 0.5)
-        this.count = 4;
+
+    var current = bird;
+
+    if (current.count <= 8)
+        this.count = (Math.random() > 0.3) ? 2 : 4;
     else
-        this.count = 2;
+        this.count = Math.pow(2, 2 + Math.floor(Math.random() * Math.sqrt(current.count) / 2));
+//            (Math.random() > 0.5) ? current.count / 4 : current.count / 2;
 
     DrawableBlock.call(this, this.w);
     this.redraw();
@@ -165,7 +170,7 @@ delete Point.prototype.t_canvas;
 delete Point.prototype.t_ctx;
 Point.prototype.redraw = Bird.prototype.redraw;
 
-Point.concat = function () {
+Point.merge = function () {
     if (birds.length == 0)
         return;
     var lastChild = birds[0];
@@ -180,7 +185,7 @@ Point.concat = function () {
                 bird.incCount(lastChild.count);
                 birds.splice(0, 1);
                 events.splice(_i, 1);
-                Point.concat();
+                Point.merge();
             }
         });
     }
@@ -209,7 +214,7 @@ Point.prototype.eat = function () {
                         if (_index > -1) {
                             points.splice(_index, 1);
                         }
-                        Point.concat();
+                        Point.merge();
                     }
                 });
             }
@@ -292,7 +297,7 @@ Wall.prototype.kill = function () {
 
 function BGWall() {
     this.x = SIZE_X;
-    this.height = Math.floor(Math.random() * 9) * 28 + 28
+    this.height = Math.floor(Math.random() * 9) * 28 + 28;
     this.y = WALL_LENGTH * 4 - this.height;
 
     DrawableBlock.call(this, WALL_LENGTH, this.height);
@@ -447,19 +452,21 @@ function update(timeDelta) {
     }
 
 
-    if (points.length == 0 || points[points.length - 1].x < SIZE_X - WALL_LENGTH * 4.5) {
-        points.push(new Point());
-    }
     if (walls.length == 0 || walls[walls.length - 1].x < SIZE_X - WALL_LENGTH * 9) {
         walls.push(new Wall());
     }
     if (walls[0].x < -WALL_LENGTH) {
         walls.splice(0, 1);
     }
+
+    if (points.length == 0 || points[points.length - 1].x < SIZE_X - WALL_LENGTH * 4.5) {
+//    if(walls[walls.length - 1].x < SIZE_X - WALL_LENGTH * 4.5){
+        points.push(new Point());
+
+    }
     if (points[0].x < -bird.w) {
         points.splice(0, 1);
     }
-
 
     for (i = 0; i < points.length; i++) {
         if (!points[i].active) continue;
@@ -492,14 +499,7 @@ function update(timeDelta) {
     for (i = birds.length - 1; i > -1; i--) {
         _b = birds[i];
         if (!_b.active) continue;
-        var _parent;
-
-        if (i != 0) {
-            _parent = birds[i - 1];
-        } else {
-            _parent = bird;
-        }
-
+        var _parent = birds[i - 1] || bird;
         _b.y += (_parent.y - _b.y) * timeDelta * 5;
         _b.x = _parent.x - bird.w - 10;
     }
