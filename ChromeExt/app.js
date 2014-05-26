@@ -33,6 +33,7 @@ var walls = [];
 var fallItems = [];
 var events = [];
 var bg_walls = [];
+var highScore;
 
 var colors = {
     2: "#eee4da",
@@ -306,8 +307,32 @@ BGWall.prototype = new DrawableBlock();
 delete BGWall.prototype.t_canvas;
 delete BGWall.prototype.t_ctx;
 
+//-------------------------------------------------------------
 
 //-----------logic-----------------------------------------------
+function calcHighScore() {
+    var current = result.score;
+    if (highScore > current) {
+        return highScore;
+    }
+    try {
+        if (localStorage) {
+            localStorage.setItem("highScore", current);
+        }
+        if (chrome.storage) {
+            chrome.storage.local.set({"highScore": current}, function () {
+                console.log("set:" + current);
+            });
+        }
+    } catch (e) {
+        console.log(e);
+        return current;
+    }
+
+    highScore = current;
+    return current;
+}
+
 function resultScreen() {
     game_ctx.clearRect(0, 0, SIZE_X, SIZE_Y - WALL_LENGTH);
     game_ctx.textAlign = 'center';
@@ -315,7 +340,10 @@ function resultScreen() {
     game_ctx.font = "bold 30px 'Clear Sans', 'Helvetica Neue', Arial, sans-serif";
     game_ctx.fillStyle = "#776e65";
     game_ctx.fillText("Score: " + result.score, SIZE_X / 2 + WALL_LENGTH / 2, SIZE_Y / 2 - WALL_LENGTH / 2);
-    game_ctx.fillText("Walls: " + result.walls, SIZE_X / 2 + WALL_LENGTH / 2, SIZE_Y / 2 + WALL_LENGTH / 2);
+    game_ctx.fillText("Walls: " + result.walls, SIZE_X / 2 + WALL_LENGTH / 2, SIZE_Y / 2);
+
+    game_ctx.fillStyle = "#eee4da";
+    game_ctx.fillText("High score: " + highScore, SIZE_X / 2 + WALL_LENGTH / 2, SIZE_Y / 2 + WALL_LENGTH);
 }
 
 function startScreen() {
@@ -372,6 +400,8 @@ function main() {
 }
 
 function reset() {
+    calcHighScore();
+
     start = false;
     bird = new Bird();
     walls = [];
@@ -545,6 +575,25 @@ function initBG() {
     game_canvas.width = SIZE_X;
     game_canvas.height = SIZE_Y - WALL_LENGTH;
     game_ctx = game_canvas.getContext("2d");
+
+
+    try {
+        // load the highscore
+        if (chrome.storage) {
+            chrome.storage.local.get('highScore', function (item) {
+                highScore = item.highScore;
+                console.log(item.highScore);
+            });
+        }
+
+        if (localStorage) {
+            highScore = localStorage.getItem("highScore");
+        }
+
+    } catch (e) {
+        console.log(e);
+    }
+
 
     initBG();
     reset();

@@ -4,7 +4,7 @@
     "short_name": "JS Canvas Flappy 2048",
 
     "description": "JavaScript canvas version of Flappy 2048 game",
-    "version": "1.5.3",
+    "version": "1.5.4",
     "app": {
         "background": {
             "scripts": ["background.js"]
@@ -12,5 +12,6 @@
     },
     "icons": { "128": "ico.png" },
 
-    "author": "Alexandr Andrienko"
+    "author": "Alexandr Andrienko",
+    "permissions": ["storage"]
 }
