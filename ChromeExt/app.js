@@ -99,9 +99,9 @@ function Bird() {
     this.y = SIZE_Y / 2;
     this.w = 40;
     this.count = 2;
-    this.jumpSpeed = 230;
+    this.jumpSpeed = 260;
     this.vertSpeed = 50;
-    this.fallingConstant = 32;
+    this.fallingConstant = 30;
 
     DrawableBlock.call(this, this.w);
     this.redraw();
@@ -154,13 +154,10 @@ function Point() {
     this.w = 40;
     this.active = true;
 
-    var current = bird;
-
-    if (current.count <= 8)
+    if (bird.count <= 8)
         this.count = (Math.random() > 0.3) ? 2 : 4;
     else
-        this.count = Math.pow(2, 2 + Math.floor(Math.random() * Math.sqrt(current.count) / 2));
-//            (Math.random() > 0.5) ? current.count / 4 : current.count / 2;
+        this.count = Math.pow(2, 2 + Math.floor(Math.random() * Math.sqrt(bird.count) / 2));
 
     DrawableBlock.call(this, this.w);
     this.redraw();
@@ -329,7 +326,7 @@ function startScreen() {
     game_ctx.fillStyle = "#776e65";
     game_ctx.fillText("Flappy 2048", SIZE_X / 2 + WALL_LENGTH / 2, SIZE_Y / 2);
     game_ctx.font = "bold 15px 'Clear Sans', 'Helvetica Neue', Arial, sans-serif";
-    game_ctx.fillText("flap to begin", SIZE_X / 2 + WALL_LENGTH / 1.5, SIZE_Y / 2 + WALL_LENGTH / 2);
+    game_ctx.fillText("use keyboard or mouse to begin", SIZE_X / 2 + WALL_LENGTH / 2, SIZE_Y / 2 + WALL_LENGTH / 2);
 }
 
 var min_fps = 10000;
@@ -460,7 +457,6 @@ function update(timeDelta) {
     }
 
     if (points.length == 0 || points[points.length - 1].x < SIZE_X - WALL_LENGTH * 4.5) {
-//    if(walls[walls.length - 1].x < SIZE_X - WALL_LENGTH * 4.5){
         points.push(new Point());
 
     }
