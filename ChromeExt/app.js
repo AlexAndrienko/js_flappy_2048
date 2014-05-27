@@ -312,6 +312,9 @@ delete BGWall.prototype.t_ctx;
 //-----------logic-----------------------------------------------
 function calcHighScore() {
     var current = result.score;
+    if (highScore === undefined)
+        return current;
+
     if (highScore > current) {
         return highScore;
     }
@@ -320,8 +323,8 @@ function calcHighScore() {
             localStorage.setItem("highScore", current);
         }
         if (chrome.storage) {
-            chrome.storage.local.set({"highScore": current}, function () {
-                console.log("set:" + current);
+            chrome.storage.sync.set({"highScore": current}, function () {
+                console.log("set: " + current);
             });
         }
     } catch (e) {
@@ -580,9 +583,9 @@ function initBG() {
     try {
         // load the highscore
         if (chrome.storage) {
-            chrome.storage.local.get('highScore', function (item) {
+            chrome.storage.sync.get('highScore', function (item) {
                 highScore = item.highScore;
-                console.log(item.highScore);
+                console.log("get: " + item.highScore);
             });
         }
 
