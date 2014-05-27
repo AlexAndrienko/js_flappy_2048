@@ -1,17 +1,3 @@
-//////------------util--------------
-
-CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
-    if (w < 2 * r) r = w / 2;
-    if (h < 2 * r) r = h / 2;
-    this.beginPath();
-    this.moveTo(x + r, y);
-    this.arcTo(x + w, y, x + w, y + h, r);
-    this.arcTo(x + w, y + h, x, y + h, r);
-    this.arcTo(x, y + h, x, y, r);
-    this.arcTo(x, y, x + w, y, r);
-    this.closePath();
-    return this;
-};
 //------------global-------------------------
 var requestAnimationFrame = window.webkitRequestAnimationFrame || window.requestAnimationFrame;
 
@@ -78,236 +64,6 @@ addEventListener("mouseup", function () {
 }, false);
 
 
-//------------objects---------------------------------------
-function DrawableBlock(width, height) {
-    var t_canvas = document.createElement('canvas');
-    t_canvas.width = width || 0;
-    t_canvas.height = height || width || 0;
-
-    this.t_canvas = t_canvas;
-    this.t_ctx = this.t_canvas.getContext('2d');
-}
-DrawableBlock.prototype.draw = function (ctx) {
-    ctx.drawImage(this.t_canvas, Math.floor(this.x), Math.floor(this.y) || 0);
-};
-
-
-function Bird() {
-    this.say = null;
-    this.smash = false;
-    this.active = true;
-    this.x = SIZE_X / 3;
-    this.y = SIZE_Y / 2;
-    this.w = 40;
-    this.count = 2;
-    this.jumpSpeed = 260;
-    this.vertSpeed = 50;
-    this.fallingConstant = 30;
-
-    DrawableBlock.call(this, this.w);
-    this.redraw();
-}
-Bird.prototype = new DrawableBlock();
-delete Bird.prototype.t_canvas;
-delete Bird.prototype.t_ctx;
-Bird.prototype.redraw = function () {
-    this.t_ctx.clearRect(0, 0, this.w, this.w);
-
-    this.t_ctx.fillStyle = colors[this.count.toString()] || "#3c3a32";
-    this.t_ctx.roundRect(0, 0, this.w, this.w, 5).fill();
-
-
-    if (this.count < 8) {
-        this.t_ctx.fillStyle = "#776e65";
-    } else {
-        this.t_ctx.fillStyle = "#f9f6f2";
-    }
-
-    var _font = 25;
-    if (this.count / 100 > 1) {
-        _font = 20;
-    }
-    if (this.count / 1000 > 1) {
-        _font = 16;
-    }
-    this.t_ctx.textAlign = 'center';
-    this.t_ctx.textBaseline = 'middle';
-    this.t_ctx.font = "bold " + _font + "px 'Clear Sans', 'Helvetica Neue', Arial, sans-serif";
-    this.t_ctx.fillText(this.say || this.count, this.w / 2, this.w / 2);
-};
-Bird.prototype.setCount = function (cnt) {
-    this.count = cnt;
-    this.redraw();
-};
-Bird.prototype.incCount = function (cnt) {
-    this.setCount(this.count + cnt);
-};
-Bird.prototype.setWord = function (say) {
-    this.say = say;
-    this.redraw();
-};
-
-
-function Point() {
-    this.x = SIZE_X + WALL_LENGTH * 4.5;
-    var gate = 2 + Math.floor(Math.random() * 4);
-    this.y = gate * WALL_LENGTH;
-    this.w = 40;
-    this.active = true;
-
-    if (bird.count <= 8)
-        this.count = (Math.random() > 0.3) ? 2 : 4;
-    else
-        this.count = Math.pow(2, 2 + Math.floor(Math.random() * Math.sqrt(bird.count) / 2));
-
-    DrawableBlock.call(this, this.w);
-    this.redraw();
-}
-Point.prototype = new DrawableBlock();
-delete Point.prototype.t_canvas;
-delete Point.prototype.t_ctx;
-Point.prototype.redraw = Bird.prototype.redraw;
-
-Point.merge = function () {
-    if (birds.length == 0)
-        return;
-    var lastChild = birds[0];
-    if (bird.count == lastChild.count) {
-        var _i = events.length;
-        lastChild.active = false;
-        events.push(function (timeDelta) {
-            lastChild.y += (bird.y - lastChild.y) * timeDelta * 25;
-            lastChild.x += (bird.x - lastChild.x) * timeDelta * 10;
-
-            if (Math.abs(lastChild.y - bird.y) < 5 && Math.abs(lastChild.x - bird.x) < 5) {
-                bird.incCount(lastChild.count);
-                birds.splice(0, 1);
-                events.splice(_i, 1);
-                Point.merge();
-            }
-        });
-    }
-};
-
-
-Point.prototype.eat = function () {
-    if (Math.abs(this.x - bird.x) > bird.w)
-        return;
-
-    if (this.x < bird.x + bird.w && this.x + this.w > bird.x) {
-        if (this.y <= bird.y + bird.w && this.y + this.w >= bird.y) {
-
-            if (bird.count == this.count) {
-                var _point = this;
-                var _i = events.length;
-                _point.active = false;
-                events.push(function (timeDelta) {
-                    _point.y += (bird.y - _point.y) * timeDelta * 25;
-                    _point.x += (bird.x - _point.x) * timeDelta * 10;
-
-                    if (Math.abs(_point.y - bird.y) < 5 && Math.abs(_point.x - bird.x) < 5) {
-                        bird.incCount(_point.count);
-                        events.splice(_i, 1);
-                        var _index = points.indexOf(_point);
-                        if (_index > -1) {
-                            points.splice(_index, 1);
-                        }
-                        Point.merge();
-                    }
-                });
-            }
-            else {
-                var newBird = new Bird();
-                newBird.y = bird.y;
-                newBird.x = bird.x;
-                newBird.setCount(bird.count);
-
-                birds.splice(0, 0, newBird);
-
-                bird.x = this.x;
-                bird.y = this.y;
-                bird.setCount(this.count);
-
-                var _index = points.indexOf(this);
-                if (_index > -1) {
-                    points.splice(_index, 1);
-                }
-
-                events.push(function (timeDelta) {
-                    bird.x -= timeDelta * WALL_SPEED;
-
-                    if (bird.x <= SIZE_X / 3) {
-                        events.splice(_i, 1);
-                        bird.x = SIZE_X / 3;
-                    }
-                });
-            }
-
-        }
-    }
-};
-
-
-function Wall() {
-    this.gate = 1 + Math.floor(Math.random() * 4);
-    this.x = SIZE_X;
-    this.passed = false;
-
-    DrawableBlock.call(this, WALL_LENGTH, SIZE_Y - WALL_LENGTH);
-
-    this.t_ctx.fillStyle = "#bbada0";
-    this.t_ctx.fillRect(0, 0, WALL_LENGTH, SIZE_Y - WALL_LENGTH);
-    this.t_ctx.clearRect(0, this.gate * WALL_LENGTH, WALL_LENGTH, WALL_LENGTH * 2);
-}
-Wall.prototype = new DrawableBlock();
-delete Wall.prototype.t_canvas;
-delete Wall.prototype.t_ctx;
-
-Wall.prototype.kill = function () {
-    if (this.x - bird.x > bird.w)
-        return;
-
-    if (this.x <= bird.x + bird.w && this.x + WALL_LENGTH >= bird.x) {
-        if (this.gate * WALL_LENGTH >= bird.y || (this.gate * WALL_LENGTH + WALL_LENGTH * 2) <= bird.y + bird.w) {
-            fallItems = birds.slice(0, birds.length);
-            fallItems.push(bird);
-            bird.smash = true;
-            bird.setWord('x_x');
-        }
-        if (!this.passed) {
-            this.passed = true;
-            result.walls++;
-        }
-    }
-
-
-    for (var i = 0; i < birds.length; i++) {
-        var _b = birds[i];
-        if (this.x <= _b.x + _b.w && this.x + WALL_LENGTH >= _b.x) {
-            if (this.gate * WALL_LENGTH >= _b.y || (this.gate * WALL_LENGTH + WALL_LENGTH * 2) <= _b.y + _b.w) {
-                fallItems = birds.slice(i, birds.length);
-                birds.splice(i, birds.length);
-            }
-        }
-    }
-};
-
-
-function BGWall() {
-    this.x = SIZE_X;
-    this.height = Math.floor(Math.random() * 9) * 28 + 28;
-    this.y = WALL_LENGTH * 4 - this.height;
-
-    DrawableBlock.call(this, WALL_LENGTH, this.height);
-
-    this.t_ctx.fillStyle = "rgba(187,173,160,0.3)";
-    this.t_ctx.fillRect(0, 0, WALL_LENGTH, this.height);
-}
-BGWall.prototype = new DrawableBlock();
-delete BGWall.prototype.t_canvas;
-delete BGWall.prototype.t_ctx;
-
-//-------------------------------------------------------------
 
 //-----------logic-----------------------------------------------
 function calcHighScore() {
@@ -347,7 +103,7 @@ function resultScreen() {
     game_ctx.fillText("Walls: " + result.walls, SIZE_X / 2 + WALL_LENGTH / 2, SIZE_Y / 2);
 
     game_ctx.fillStyle = "#eee4da";
-    game_ctx.fillText("High score: " + highScore, SIZE_X / 2 + WALL_LENGTH / 2, SIZE_Y / 2 + WALL_LENGTH);
+    game_ctx.fillText("High score: " + highScore || result.score, SIZE_X / 2 + WALL_LENGTH / 2, SIZE_Y / 2 + WALL_LENGTH);
 }
 
 function startScreen() {
@@ -573,13 +329,7 @@ function initBG() {
     movingbg_ctx = moving_bg.getContext("2d");
 }
 
-(function init() {
-    var game_canvas = document.querySelector('#game');
-    game_canvas.width = SIZE_X;
-    game_canvas.height = SIZE_Y - WALL_LENGTH;
-    game_ctx = game_canvas.getContext("2d");
-
-
+function loadHighScore(){
     try {
         // load the highscore
         if (chrome.storage) {
@@ -596,8 +346,16 @@ function initBG() {
     } catch (e) {
         console.log(e);
     }
+}
 
 
+(function init() {
+    var game_canvas = document.querySelector('#game');
+    game_canvas.width = SIZE_X;
+    game_canvas.height = SIZE_Y - WALL_LENGTH;
+    game_ctx = game_canvas.getContext("2d");
+
+    loadHighScore();
     initBG();
     reset();
     main();
