@@ -312,8 +312,9 @@ delete BGWall.prototype.t_ctx;
 //-----------logic-----------------------------------------------
 function calcHighScore() {
     var current = result.score;
+
     if (highScore === undefined)
-        return current;
+        highScore = 0;
 
     if (highScore > current) {
         return highScore;
@@ -403,8 +404,6 @@ function main() {
 }
 
 function reset() {
-    calcHighScore();
-
     start = false;
     bird = new Bird();
     walls = [];
@@ -477,6 +476,7 @@ function update(timeDelta) {
         bird.vertSpeed = bird.jumpSpeed;
     }
     if (bird.y >= SIZE_Y - bird.w - WALL_LENGTH) {
+        calcHighScore();
         reset();
         return false;
     }
