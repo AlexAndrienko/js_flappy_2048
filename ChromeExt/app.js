@@ -331,7 +331,6 @@ function initBG() {
 
 function loadHighScore(){
     try {
-        // load the highscore
         if (chrome.storage) {
             chrome.storage.sync.get('highScore', function (item) {
                 highScore = item.highScore;
