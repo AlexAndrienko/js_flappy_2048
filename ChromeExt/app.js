@@ -261,6 +261,11 @@ function update(timeDelta) {
     }
 
 
+    if (points.length > 0 && boosts.length == 0 && points[points.length - 1].x < SIZE_X - WALL_LENGTH * 4.5) {
+        if (Math.random() > 0.8 )
+        boosts.push(new Boost());
+    }
+
     if (walls.length == 0 || walls[walls.length - 1].x < SIZE_X - WALL_LENGTH * 9) {
         walls.push(new Wall());
     }
@@ -276,11 +281,6 @@ function update(timeDelta) {
     }
 
 
-    if ((points[points.length - 1].x + WALL_LENGTH * 4.5 + bird.w)  - SIZE_X < 10) {
-//        if (Math.random() > 0.3)
-            boosts.push(new Boost());
-
-    }
     if (boosts.length > 0)
         if (boosts[0].x < -bird.w) {
             boosts.splice(0, 1);

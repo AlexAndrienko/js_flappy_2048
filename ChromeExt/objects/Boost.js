@@ -4,9 +4,8 @@
 
 
 function Boost() {
-    this.x = SIZE_X;
-//        + WALL_LENGTH * 4.5 + bird.w;
-    var gate = 2 + Math.floor(Math.random() * 4);
+    var gate = 1 + Math.floor(Math.random() * 4);
+    this.x = SIZE_X + gate * WALL_LENGTH;
     this.y = gate * WALL_LENGTH;
     this.w = 40;
     this.active = true;
