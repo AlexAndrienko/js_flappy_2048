@@ -9,17 +9,22 @@ function Wall() {
     this.passed = false;
 
     DrawableBlock.call(this, WALL_LENGTH, SIZE_Y - WALL_LENGTH);
-
-    this.t_ctx.fillStyle = "#bbada0";
-    this.t_ctx.fillRect(0, 0, WALL_LENGTH, SIZE_Y - WALL_LENGTH);
-    this.t_ctx.clearRect(0, this.gate * WALL_LENGTH, WALL_LENGTH, WALL_LENGTH * 2);
+    this.redraw();
 }
 Wall.prototype = new DrawableBlock();
 delete Wall.prototype.t_canvas;
 delete Wall.prototype.t_ctx;
 
+Wall.prototype.redraw = function () {
+    this.t_ctx.clearRect(0, 0, WALL_LENGTH, SIZE_Y - WALL_LENGTH);
+
+    this.t_ctx.fillStyle = Wall.color;
+    this.t_ctx.fillRect(0, 0, WALL_LENGTH, SIZE_Y - WALL_LENGTH);
+    this.t_ctx.clearRect(0, this.gate * WALL_LENGTH, WALL_LENGTH, WALL_LENGTH * 2);
+}
+
 Wall.prototype.kill = function () {
-    if (this.x - bird.x > bird.w)
+    if (this.x - bird.x > bird.w || skip)
         return;
 
     if (this.x <= bird.x + bird.w && this.x + WALL_LENGTH >= bird.x) {
@@ -46,3 +51,5 @@ Wall.prototype.kill = function () {
         }
     }
 };
+
+Wall.color = '#bbada0';

@@ -13,6 +13,7 @@ var WALL_SPEED = 200;
 var keysDown = false;
 var start = false;
 var bird;
+var boosts = [];
 var points = [];
 var birds = [];
 var walls = [];
@@ -20,8 +21,11 @@ var fallItems = [];
 var events = [];
 var bg_walls = [];
 var highScore;
+var skip = false;
+var boost_timer = 15;
 
 var colors = {
+    0: "#5fda93",
     2: "#eee4da",
     4: "#ede0c8",
     8: "#f2b179",
@@ -62,7 +66,6 @@ addEventListener("mousedown", function () {
 addEventListener("mouseup", function () {
     keysDown = false;
 }, false);
-
 
 
 //-----------logic-----------------------------------------------
@@ -160,6 +163,7 @@ function main() {
 }
 
 function reset() {
+    skip = false;
     start = false;
     bird = new Bird();
     walls = [];
@@ -167,6 +171,8 @@ function reset() {
     birds = [];
     fallItems = [];
     events = [];
+    boosts = [];
+    boost_timer = 15;
 
     min_fps = 1000;
     max_fps = 0;
@@ -208,6 +214,10 @@ function render() {
     for (i = 0; i < points.length; i++) {
         points[i].draw(game_ctx);
     }
+    if (boosts.length > 0)
+        for (i = 0; i < boosts.length; i++) {
+            boosts[i].draw(game_ctx);
+        }
     for (i = 0; i < birds.length; i++) {
         birds[i].draw(game_ctx);
     }
@@ -221,6 +231,19 @@ function render() {
 
 function update(timeDelta) {
     var i, _b, _f;
+
+    boost_timer -= timeDelta;
+
+    //TODO
+    if (boost_timer <= 0) {
+        boost_timer = 15;
+        Wall.color = '#bbada0';
+        skip = false;
+        for (var i = 0; i < walls.length; i++) {
+            walls[i].redraw();
+        }
+    }
+    ////////////
 
     result.score = bird.count;
     for (i = birds.length - 1; i > -1; i--) {
@@ -247,18 +270,34 @@ function update(timeDelta) {
 
     if (points.length == 0 || points[points.length - 1].x < SIZE_X - WALL_LENGTH * 4.5) {
         points.push(new Point());
-
     }
     if (points[0].x < -bird.w) {
         points.splice(0, 1);
     }
 
+
+    if ((points[points.length - 1].x + WALL_LENGTH * 4.5 + bird.w)  - SIZE_X < 10) {
+//        if (Math.random() > 0.3)
+            boosts.push(new Boost());
+
+    }
+    if (boosts.length > 0)
+        if (boosts[0].x < -bird.w) {
+            boosts.splice(0, 1);
+        }
+
+
     for (i = 0; i < points.length; i++) {
         if (!points[i].active) continue;
         points[i].x -= WALL_SPEED * timeDelta;
         points[i].eat();
-
     }
+    if (boosts.length > 0)
+        for (i = 0; i < boosts.length; i++) {
+            if (!boosts[i].active) continue;
+            boosts[i].x -= WALL_SPEED * timeDelta;
+            boosts[i].eat();
+        }
     for (i = 0; i < walls.length; i++) {
         walls[i].x -= WALL_SPEED * timeDelta;
         walls[i].kill();
@@ -329,7 +368,7 @@ function initBG() {
     movingbg_ctx = moving_bg.getContext("2d");
 }
 
-function loadHighScore(){
+function loadHighScore() {
     try {
         if (chrome.storage) {
             chrome.storage.sync.get('highScore', function (item) {
