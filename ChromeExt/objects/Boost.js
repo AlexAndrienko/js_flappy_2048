@@ -28,7 +28,7 @@ Boost.prototype.eat = function(){
     if (this.x < bird.x + bird.w && this.x + this.w > bird.x) {
         if (this.y <= bird.y + bird.w && this.y + this.w >= bird.y) {
             skip = true;
-            boost_timer = 15;
+            boost_timer = 10;
             boosts.splice(boosts.indexOf(this), 1);
 
             Wall.color = "rgba(187,173,160,0.5)";

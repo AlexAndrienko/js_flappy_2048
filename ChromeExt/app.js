@@ -22,7 +22,7 @@ var events = [];
 var bg_walls = [];
 var highScore;
 var skip = false;
-var boost_timer = 15;
+var boost_timer = 10;
 
 var colors = {
     0: "#5fda93",
@@ -172,7 +172,7 @@ function reset() {
     fallItems = [];
     events = [];
     boosts = [];
-    boost_timer = 15;
+    boost_timer = 10;
 
     min_fps = 1000;
     max_fps = 0;
@@ -236,7 +236,7 @@ function update(timeDelta) {
 
     //TODO
     if (boost_timer <= 0) {
-        boost_timer = 15;
+        boost_timer = 10;
         Wall.color = '#bbada0';
         skip = false;
         for (var i = 0; i < walls.length; i++) {
@@ -245,10 +245,12 @@ function update(timeDelta) {
     }
     ////////////
 
-    result.score = bird.count;
-    for (i = birds.length - 1; i > -1; i--) {
-        if (birds[i].count > result.score)
-            result.score = birds[i].count;
+    if (!bird.smash) {
+        result.score = bird.count;
+        for (i = birds.length - 1; i > -1; i--) {
+            if (birds[i].count > result.score)
+                result.score = birds[i].count;
+        }
     }
 
     if (keysDown && !bird.smash) {
@@ -262,8 +264,8 @@ function update(timeDelta) {
 
 
     if (points.length > 0 && boosts.length == 0 && points[points.length - 1].x < SIZE_X - WALL_LENGTH * 4.5) {
-        if (Math.random() > 0.8 )
-        boosts.push(new Boost());
+        if (Math.random() > 0.8)
+            boosts.push(new Boost());
     }
 
     if (walls.length == 0 || walls[walls.length - 1].x < SIZE_X - WALL_LENGTH * 9) {
