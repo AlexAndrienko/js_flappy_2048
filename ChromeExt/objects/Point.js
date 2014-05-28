@@ -10,9 +10,13 @@ function Point() {
     this.active = true;
 
     if (bird.count <= 8)
-        this.count = (Math.random() > 0.3) ? 2 : 4;
+        this.count = (Math.random() > 0.5) ? 2 : 4;
+    else if (bird.count <= 64)
+        this.count = Math.pow(2, 2 + Math.floor(Math.random()*2));
+    else if (bird.count <= 512)
+        this.count = Math.pow(2, 4 + Math.floor(Math.random()*3));
     else
-        this.count = Math.pow(2, 2 + Math.floor(Math.random() * Math.sqrt(bird.count) / 2));
+        this.count = Math.pow(2, 6 + Math.floor(Math.random()*4));
 
     DrawableBlock.call(this, this.w);
     this.redraw();
